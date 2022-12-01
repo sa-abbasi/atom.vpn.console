@@ -33,7 +33,7 @@ namespace Atom.VPN.Console
 
         public SocketState CurrentState { get; private set; }
 
-        public MessageListener(IMessageParser MessageParser, IMessgeBroker MessageBroker, string ListeningUrl = "ws://0.0.0.0:8081")
+        public MessageListener(IMessageParser MessageParser, IMessgeBroker MessageBroker, string ListeningUrl)
         {
             logger.Info("opening websocket to listen on {0}", ListeningUrl);
 

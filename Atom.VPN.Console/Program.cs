@@ -4,13 +4,23 @@ using System.Text;
 using System.Threading.Tasks;
 using NLog.Fluent;
 using System;
+using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace Atom.VPN.Console
 {
-    internal class Program
+    internal partial class Program
     {
         static System.Threading.Mutex singleTonInstance = null;
+        static NLog.ILogger logger = null;
+        static EventHandler _handler;
+        static bool exitSystem = false;
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="args"></param>
+        /// <returns>0=OK, 1=Exception/Error, 2=Already Running,</returns>
         static int Main(string[] args)
         {
             if (IsAlreadyRunning())
@@ -18,10 +28,16 @@ namespace Atom.VPN.Console
                 return 2;
             }
 
-            NLog.ILogger logger = NLog.LogManager.GetLogger("Program.Main");
+            logger = NLog.LogManager.GetLogger("Program.Main");
 
             logger.Info("****************Process has started****************");
-            bool status = false;
+
+
+            int returnCode = -1;
+
+            _handler += new EventHandler(Handler);
+            SetConsoleCtrlHandler(_handler, true);
+
 
             try
             {
@@ -37,25 +53,34 @@ namespace Atom.VPN.Console
                 IMessageParser messageParser = new MessageParser();
 
                 //Message Listener listens for incoming wbsocket connections
-                MessageListener messageListener = new MessageListener(messageParser, messageBroker);
+                string ListeningUrl = Properties.Settings.Default.ListeningUrl;
+                MessageListener messageListener = new MessageListener(messageParser, messageBroker, ListeningUrl);
                 messageListener.Listen();
                 logger.Info("websocket listening loop has started");
 
-                status = true;
+                returnCode = 0;
 
 
             }
             catch (Exception ex)
             {
                 logger.Error(ex, "VPN.Console encountered an error");
+                returnCode = 1;
             }
 
-            if (status)
-                System.Console.ReadLine();
+
+            if (returnCode == 0)
+            {
+                while (!exitSystem)
+                {
+                    Thread.Sleep(500);
+                }
+            }
 
             logger.Warn("Application is shutting down");
 
-            return 0;
+
+            return returnCode;
         }
 
         static bool IsAlreadyRunning()
@@ -77,7 +102,38 @@ namespace Atom.VPN.Console
             return false;
         }
 
+
+
+
+
+        #region Trap application termination
+        [DllImport("Kernel32")]
+        private static extern bool SetConsoleCtrlHandler(EventHandler handler, bool add);
+
+        private delegate bool EventHandler(CtrlType sig);
+
+        private static bool Handler(CtrlType sig)
+        {
+            logger.Warn("Exiting system due to external CTRL-C, or process kill, or shutdown");
+
+            try { singleTonInstance.Close(); } catch { }
+
+
+            //allow main to run off
+            exitSystem = true;
+
+            //shutdown right away so there are no lingering threads
+            Environment.Exit(0);
+
+            return true;
+        }
+        #endregion
+
+
+
     }
+
+
 
 
 }
