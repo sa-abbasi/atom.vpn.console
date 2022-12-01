@@ -1,2 +1,4 @@
 /.vs
 /packages
+/Atom.VPN.Console/obj
+/Atom.VPN.Console/bin
