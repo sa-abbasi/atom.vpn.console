@@ -37,9 +37,14 @@ namespace Atom.VPN.Console
                 return result;
             }
 
-            if (MessageType == (int)MessageTypes.Connect)
+            if (MessageType == (int)MessageTypes.ConnectSDK)
             {
                 result = JsonConvert.DeserializeObject<ConnectRequest>(message);
+            }
+
+            if (MessageType == (int)MessageTypes.ConnectVPN)
+            {
+                result = JsonConvert.DeserializeObject<ConnectVPNRequest>(message);
             }
 
             if (result == null)

@@ -16,6 +16,10 @@ namespace Atom.VPN.Console
         static EventHandler _handler;
         static bool exitSystem = false;
 
+        public static string SecretKey = "ecb0335542a57aa241881404a9319c651545c1df";
+        public static string UserName = "purevpn0s7394661";
+        public static string Password = "mpmf1eiu";
+
         /// <summary>
         /// 
         /// </summary>
@@ -31,6 +35,23 @@ namespace Atom.VPN.Console
             logger = NLog.LogManager.GetLogger("Program.Main");
 
             logger.Info("****************Process has started****************");
+            /*
+           ICommandProcessor sdkFacade = new SDKFacade();
+
+
+           sdkFacade.Connect(new ConnectRequest() { PSK = SecretKey, UserId = UserName, Password = Password });
+           var countries = sdkFacade.GetCountryList();
+           var protocols = sdkFacade.GetProtocolList();
+           var cities = sdkFacade.GetCityList();
+
+           string country = "US";
+           string protocol = "PPTP";
+
+           sdkFacade.StartVPN(country, protocol);
+           */
+
+            // sdkFacade.Disconnect();
+
 
 
             int returnCode = -1;

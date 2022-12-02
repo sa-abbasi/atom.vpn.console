@@ -72,9 +72,14 @@ namespace Atom.VPN.Console
         {
             int RequestType = Request.MessageType;
 
-            if (RequestType == (int)MessageTypes.Connect)
+            if (RequestType == (int)MessageTypes.ConnectSDK)
             {
                 return new ConnectMessageProcessor(this.commandProcessor);
+            }
+
+            if (RequestType == (int)MessageTypes.DisconnectSDK)
+            {
+                return new DisconnectMessageProcessor(this.commandProcessor);
             }
 
             if (RequestType == (int)MessageTypes.GetCountryList)
@@ -92,10 +97,18 @@ namespace Atom.VPN.Console
                 return new CityMessageProcessor(this.commandProcessor);
             }
 
-            if (RequestType == (int)MessageTypes.Disconnect)
+            if (RequestType == (int)MessageTypes.ConnectVPN)
             {
-                return new DisconnectMessageProcessor(this.commandProcessor);
+                return new CityMessageProcessor(this.commandProcessor);
             }
+
+            if (RequestType == (int)MessageTypes.DisconnectVPN)
+            {
+                return new CityMessageProcessor(this.commandProcessor);
+            }
+
+
+
 
 
 

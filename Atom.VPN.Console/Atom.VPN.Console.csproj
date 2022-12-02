@@ -52,9 +52,12 @@
     <Compile Include="MessageProcessor\ConnectMessageProcessor.cs" />
     <Compile Include="MessageProcessor\CountryMessageProcessor.cs" />
     <Compile Include="Messaging\BaseResponse.cs" />
+    <Compile Include="Messaging\ConnectRequest.cs" />
+    <Compile Include="Messaging\ConnectVPNRequest.cs" />
     <Compile Include="Messaging\IMessageChannel.cs" />
     <Compile Include="Messaging\IMessgeBroker.cs" />
     <Compile Include="Messaging\IMessageProcessor.cs" />
+    <Compile Include="Messaging\InvalidRequest.cs" />
     <Compile Include="Messaging\MessageParser.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
