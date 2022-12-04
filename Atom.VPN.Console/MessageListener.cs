@@ -30,10 +30,11 @@ namespace Atom.VPN.Console
 
         IMessageParser messageParser = null;
         IMessgeBroker messageBroker = null;
+        IMessageNotifier messageNotifier = null;
 
         public SocketState CurrentState { get; private set; }
 
-        public MessageListener(IMessageParser MessageParser, IMessgeBroker MessageBroker, string ListeningUrl)
+        public MessageListener(IMessageParser MessageParser, IMessgeBroker MessageBroker, IMessageNotifier MessageNotifier, string ListeningUrl)
         {
             logger.Info("opening websocket to listen on {0}", ListeningUrl);
 
@@ -41,7 +42,25 @@ namespace Atom.VPN.Console
             CurrentState = SocketState.None;
             this.messageParser = MessageParser;
             this.messageBroker = MessageBroker;
+            this.messageNotifier = MessageNotifier;
+            this.messageNotifier.OnMessageReceived += OnSDKMessage;
 
+        }
+
+        private void OnSDKMessage(string Message)
+        {
+            if (this.clientSocket != null)
+            {
+                try
+                {
+
+                    this.clientSocket.Send(Message);
+                }
+                catch (Exception ex)
+                {
+                    logger.Error(ex, "websocket_message_forwarding_error");
+                }
+            }
         }
 
         /// <summary>
@@ -162,4 +181,7 @@ namespace Atom.VPN.Console
         Opened = 1,
         Closed = 2
     }
+
+
+
 }

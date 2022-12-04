@@ -1,13 +1,10 @@
 ﻿namespace Atom.VPN.Console
 {
-    /// <summary>
-    /// Processes Disconnect command
-    /// </summary>
-    public class DisconnectSDKProcessor : IMessageProcessor
+    public class DisconnectVPNProcessor : IMessageProcessor
     {
         ICommandProcessor commandProcessor = null;
 
-        public DisconnectSDKProcessor(ICommandProcessor CommandProcessor)
+        public DisconnectVPNProcessor(ICommandProcessor CommandProcessor)
         {
             this.commandProcessor = CommandProcessor;
         }
@@ -17,7 +14,7 @@
 
             var request = Request as ConnectRequest;
 
-            commandProcessor.Disconnect();
+            commandProcessor.DisconnectVPN();
             Response.IsOK = true;
             Response.Message = "Disconnected successfully";
             return Response;

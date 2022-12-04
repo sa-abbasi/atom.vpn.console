@@ -79,7 +79,7 @@ namespace Atom.VPN.Console
 
             if (RequestType == (int)MessageTypes.DisconnectSDK)
             {
-                return new DisconnectMessageProcessor(this.commandProcessor);
+                return new DisconnectSDKProcessor(this.commandProcessor);
             }
 
             if (RequestType == (int)MessageTypes.GetCountryList)
@@ -99,12 +99,12 @@ namespace Atom.VPN.Console
 
             if (RequestType == (int)MessageTypes.ConnectVPN)
             {
-                return new CityMessageProcessor(this.commandProcessor);
+                return new ConnectVPNMessageProcessor(this.commandProcessor);
             }
 
             if (RequestType == (int)MessageTypes.DisconnectVPN)
             {
-                return new CityMessageProcessor(this.commandProcessor);
+                return new DisconnectVPNProcessor(this.commandProcessor);
             }
 
 

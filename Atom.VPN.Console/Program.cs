@@ -35,23 +35,6 @@ namespace Atom.VPN.Console
             logger = NLog.LogManager.GetLogger("Program.Main");
 
             logger.Info("****************Process has started****************");
-            /*
-           ICommandProcessor sdkFacade = new SDKFacade();
-
-
-           sdkFacade.Connect(new ConnectRequest() { PSK = SecretKey, UserId = UserName, Password = Password });
-           var countries = sdkFacade.GetCountryList();
-           var protocols = sdkFacade.GetProtocolList();
-           var cities = sdkFacade.GetCityList();
-
-           string country = "US";
-           string protocol = "PPTP";
-
-           sdkFacade.StartVPN(country, protocol);
-           */
-
-            // sdkFacade.Disconnect();
-
 
 
             int returnCode = -1;
@@ -64,7 +47,9 @@ namespace Atom.VPN.Console
             {
                 logger.Info("creating sdkfacade");
 
-                ICommandProcessor sdkFacade = new SDKFacade();
+                var middleMan = new MessageProxy();
+
+                ICommandProcessor sdkFacade = new SDKFacade(middleMan);
 
 
                 //MessageBroker uses sdkFacade to execute commands on Atm.VPN Windows SDK
@@ -75,7 +60,7 @@ namespace Atom.VPN.Console
 
                 //Message Listener listens for incoming wbsocket connections
                 string ListeningUrl = Properties.Settings.Default.ListeningUrl;
-                MessageListener messageListener = new MessageListener(messageParser, messageBroker, ListeningUrl);
+                MessageListener messageListener = new MessageListener(messageParser, messageBroker, middleMan, ListeningUrl);
                 messageListener.Listen();
                 logger.Info("websocket listening loop has started");
 
@@ -123,7 +108,27 @@ namespace Atom.VPN.Console
             return false;
         }
 
+        static void TestingCode()
+        {
+            /*
+         ICommandProcessor sdkFacade = new SDKFacade();
 
+
+         sdkFacade.Connect(new ConnectRequest() { PSK = SecretKey, UserId = UserName, Password = Password });
+         var countries = sdkFacade.GetCountryList();
+         var protocols = sdkFacade.GetProtocolList();
+         var cities = sdkFacade.GetCityList();
+
+         string country = "US";
+         string protocol = "PPTP";
+
+         sdkFacade.StartVPN(country, protocol);
+         */
+
+            // sdkFacade.Disconnect();
+
+
+        }
 
 
 

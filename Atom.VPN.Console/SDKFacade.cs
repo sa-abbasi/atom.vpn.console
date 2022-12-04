@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Linq;
+using Newtonsoft.Json;
 
 namespace Atom.VPN.Console
 {
@@ -66,13 +67,13 @@ namespace Atom.VPN.Console
 
         public bool IsSDKInitializing { get; private set; } = false;
         public bool ISSDKInitialized { get; private set; } = false;
+        IMessagePublisher MessagePublisher = null;
 
 
 
-
-        public SDKFacade()
+        public SDKFacade(IMessagePublisher MessagePublisher)
         {
-
+            this.MessagePublisher = MessagePublisher;
         }
 
         /// <summary>
@@ -86,10 +87,10 @@ namespace Atom.VPN.Console
             {
                 //System.Threading.Thread.Sleep(15000);
 
-                logger.Trace($"Connecting VPN Country:{Request.Country}, Protocol:{Request.Protocol}");
+                logger.Trace($"Connecting VPN Country:{Request.Country}, PrimaryProtocol:{Request.PrimaryProtocol}");
 
 
-                var protocol = this.Protocols.FirstOrDefault(x => x.ProtocolSlug == Request.Protocol);
+                var protocol = this.Protocols.FirstOrDefault(x => x.ProtocolSlug == Request.PrimaryProtocol);
 
                 var country = this.Countries.FirstOrDefault(x => x.CountrySlug == Request.Country);
 
@@ -115,8 +116,8 @@ namespace Atom.VPN.Console
                 VPNProperties properties = new VPNProperties(country, protocol);
 
 
-                properties.UseOptimization = false;
-                properties.UseSmartDialing = false;
+                properties.UseOptimization = Request.UseOptimization;
+                properties.UseSmartDialing = Request.UseSmartDialing;
 
                 /*
                 else if (UseCityConnection)
@@ -134,18 +135,33 @@ namespace Atom.VPN.Console
 
                 properties.SecondaryProtocol = secondaryProtocol;
                 properties.TertiaryProtocol = tertiaryProtocol;
-                properties.UseSplitTunneling = false;
-                properties.DoCheckInternetConnectivity = true;
-                properties.EnableDNSLeakProtection = false;
-                properties.EnableIPv6LeakProtection = false;
+                properties.UseSplitTunneling = Request.UseSplitTunneling;
+                properties.DoCheckInternetConnectivity = Request.DoCheckInternetConnectivity;
+                properties.EnableDNSLeakProtection = Request.EnableDNSLeakProtection;
+                properties.EnableIPv6LeakProtection = Request.EnableIPv6LeakProtection;
 
 
 
                 atomManager.Credentials = new Credentials(Creds.UserId, Creds.Password);
 
+                DateTime t1 = DateTime.Now.AddSeconds(16);
 
+            lblAgain:
+                try
+                {
+                    logger.Info("trying to connect vpn");
+                    atomManager.Connect(properties);
+                }
+                catch (Exception ex)
+                {
+                    if (DateTime.Now < t1)
+                    {
+                        System.Threading.Thread.Sleep(500);
+                        goto lblAgain;
+                    }
 
-                atomManager.Connect(properties);
+                    throw;
+                }
 
                 logger.Info("VPN Connection has been made successfully");
             }
@@ -229,8 +245,27 @@ namespace Atom.VPN.Console
             return atomManager.VPNConnectionState == VPNState.CONNECTED;
         }
 
+
+
+        private void PublishMessage(object objectData)
+        {
+            try
+            {
+
+                var pl = new { source = "sdk", data = objectData };
+
+                this.MessagePublisher.Publish(JsonConvert.SerializeObject(pl));
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex, "message publishing error");
+            }
+        }
+
         public bool Disconnect()
         {
+            PublishMessage(new { message = "Disconnecting VPN" });
+
             if (atomManager.VPNConnectionState == VPNState.DISCONNECTED)
                 return true;
 
@@ -280,7 +315,14 @@ namespace Atom.VPN.Console
                 logger.Error(e.Error, "ConnectedLocation_callback_error");
             }
 
-            logger.Info($" IP: {e.ConnectedLocation.Ip}, Country: {e.ConnectedLocation.Country}, Server: {e.ConnectedLocation.Server}");
+            var info = $" IP: {e.ConnectedLocation.Ip}, Country: {e.ConnectedLocation.Country}, Server: {e.ConnectedLocation.Server}";
+            logger.Info(info);
+
+            var info2 = new { Connection = new { IP = e.ConnectedLocation.Ip, Country = e.ConnectedLocation.Country, City = e.ConnectedLocation.City } };
+
+            // JsonConvert.SerializeObject(info);
+
+            PublishMessage(info2);
 
 
         }
@@ -299,6 +341,8 @@ namespace Atom.VPN.Console
             logger.Error(e.Exception, "Unable to access internet {0}", e.Message);
             //var a = e.ConnectionDetails;
 
+            PublishMessage(new { message = "Unable to access internet", error = e.Message });
+
         }
 
         private void AtomManagerInstance_StateChanged(object sender, StateChangedEventArgs e)
@@ -309,7 +353,7 @@ namespace Atom.VPN.Console
                 //Send a message to front end
             }
 
-
+            PublishMessage(new { message = "VPN State Changed", newState = e.State.ToString() });
         }
 
         private void AtomManagerInstance_Connected(object sender, EventArgs e)
@@ -320,11 +364,14 @@ namespace Atom.VPN.Console
             {
                 atomManager.ApplySplitTunneling(new SDK.Core.Models.SplitApplication() { CompleteExePath = "Chrome.exe" });
             }
+
+            PublishMessage(new { message = "ATOM VPN Manager has connected" });
         }
 
         private void AtomManagerInstance_Disconnected(object sender, DisconnectedEventArgs e)
         {
             logger.Info("OnDisconnected callback {0}", e.Message);
+            PublishMessage(new { message = "ATOM VPN Manager has disconnected" });
 
         }
 
@@ -332,13 +379,14 @@ namespace Atom.VPN.Console
         {
             logger.Info("OnDialError callback {0}", e.Message);
 
-
+            PublishMessage(new { message = "ATOM VPN Manager dialup error", error = e.Message });
 
         }
 
         private void AtomManagerInstance_Redialing(object sender, ErrorEventArgs e)
         {
             logger.Info("OnRedialling callback {0}", e.Message);
+            PublishMessage(new { message = "ATOM VPN Manager is redialing" });
 
 
         }
@@ -357,7 +405,7 @@ namespace Atom.VPN.Console
         private void AtomManagerInstance_AtomDependenciesMissing(object sender, SDK.Core.CustomEventArgs.AtomDependenciesMissingEventArgs e)
         {
             logger.Error(e.Exception, "Dependencies are missing ");
-
+            PublishMessage(new { message = "ATOM VPN Dependencies are missing", error = e.Exception });
 
         }
 

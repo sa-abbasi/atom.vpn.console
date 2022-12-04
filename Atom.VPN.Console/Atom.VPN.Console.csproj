@@ -45,8 +45,11 @@
   <ItemGroup>
     <Compile Include="CtrlType.cs" />
     <Compile Include="Enums.cs" />
+    <Compile Include="MessageProxy.cs" />
     <Compile Include="MessageProcessor\CityMessageProcessor.cs" />
+    <Compile Include="MessageProcessor\ConnectVPNMessageProcessor.cs" />
     <Compile Include="MessageProcessor\DisconnectMessageProcessor.cs" />
+    <Compile Include="MessageProcessor\DisconnectVPNProcessor.cs" />
     <Compile Include="MessageProcessor\ProtocolMessageProcessor.cs" />
     <Compile Include="Messaging\BaseRequest.cs" />
     <Compile Include="MessageProcessor\ConnectMessageProcessor.cs" />
