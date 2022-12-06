@@ -62,6 +62,7 @@ namespace Atom.VPN.Console
         ConnectRequest Creds { get; set; }
         List<Country> Countries { get; set; }
         List<Protocol> Protocols { get; set; }
+        List<City> Cities { get; set; }
 
 
 
@@ -74,6 +75,27 @@ namespace Atom.VPN.Console
         public SDKFacade(IMessagePublisher MessagePublisher)
         {
             this.MessagePublisher = MessagePublisher;
+            this.Protocols = new List<Protocol>();
+            this.Countries = new List<Country>();
+            this.Cities = new List<City>();
+        }
+
+        private void Init()
+        {
+            if (this.Protocols.Count == 0)
+            {
+                GetProtocolList();
+            }
+
+            if (this.Countries.Count == 0)
+            {
+                GetCountryList();
+            }
+
+            if (this.Cities.Count == 0)
+            {
+                GetCityList();
+            }
         }
 
         /// <summary>
@@ -85,10 +107,18 @@ namespace Atom.VPN.Console
         {
             try
             {
-                //System.Threading.Thread.Sleep(15000);
+                //System.Threading.Thread.Sleep(15000); //due to a bug in SDK, see work around through label below
+
+                //Todo: Note work is required in this method for Secondary and Tertiary protocols
+
+                if (string.IsNullOrEmpty(Request.PrimaryProtocol))
+                {
+                    throw new NullReferenceException("Request.PrimaryProtocol cannot be null or empty");
+                }
 
                 logger.Trace($"Connecting VPN Country:{Request.Country}, PrimaryProtocol:{Request.PrimaryProtocol}");
 
+                Init();
 
                 var protocol = this.Protocols.FirstOrDefault(x => x.ProtocolSlug == Request.PrimaryProtocol);
 
@@ -131,7 +161,7 @@ namespace Atom.VPN.Console
                 }
                  */
 
-                secondaryProtocol = tertiaryProtocol = null;
+                // secondaryProtocol = tertiaryProtocol = null;
 
                 properties.SecondaryProtocol = secondaryProtocol;
                 properties.TertiaryProtocol = tertiaryProtocol;
@@ -294,6 +324,7 @@ namespace Atom.VPN.Console
         public List<City> GetCityList()
         {
             var cities = atomManager.GetCities();
+            this.Cities = cities;
             return cities;
         }
 
