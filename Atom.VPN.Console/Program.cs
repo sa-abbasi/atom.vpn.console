@@ -16,9 +16,6 @@ namespace Atom.VPN.Console
         static EventHandler _handler;
         static bool exitSystem = false;
 
-        public static string SecretKey = "ecb0335542a57aa241881404a9319c651545c1df";
-        public static string UserName = "purevpn0s7394661";
-        public static string Password = "mpmf1eiu";
 
         /// <summary>
         /// 
@@ -47,9 +44,9 @@ namespace Atom.VPN.Console
             {
                 logger.Info("creating sdkfacade");
 
-                var middleMan = new MessageProxy();
+                var messageProxy = new MessageProxy();
 
-                ICommandProcessor sdkFacade = new SDKFacade(middleMan);
+                ICommandProcessor sdkFacade = new SDKFacade(messageProxy);
 
 
                 //MessageBroker uses sdkFacade to execute commands on Atm.VPN Windows SDK
@@ -60,7 +57,7 @@ namespace Atom.VPN.Console
 
                 //Message Listener listens for incoming wbsocket connections
                 string ListeningUrl = Properties.Settings.Default.ListeningUrl;
-                MessageListener messageListener = new MessageListener(messageParser, messageBroker, middleMan, ListeningUrl);
+                MessageListener messageListener = new MessageListener(messageParser, messageBroker, messageProxy, ListeningUrl);
                 messageListener.Listen();
                 logger.Info("websocket listening loop has started");
 
